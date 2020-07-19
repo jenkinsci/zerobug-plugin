@@ -5,16 +5,15 @@ import jenkins.model.RunAction2;
 
 public class ZeroBugAction implements RunAction2 {
 	private transient Run run;
+	
 	private String token;
-	private String projectName;
 	private String buildId;
 	private String srcIframe;
 	
-	private final static String URL_RESPONSE = "https://www.google.com";
+	private final static String URL_RESPONSE = "https://plugins.jenkins.io";
 
-    public ZeroBugAction(String token, String projectName, String buildId) {
+    public ZeroBugAction(String token, String buildId) {
     	this.token = token;
-        this.projectName = projectName;
         this.buildId = buildId;
     }
 
@@ -22,10 +21,6 @@ public class ZeroBugAction implements RunAction2 {
 		return token;
 	}
 
-	public String getProjectName() {
-		return projectName;
-	}
-	
     public String getBuildId() {
 		return buildId;
 	}
@@ -60,7 +55,7 @@ public class ZeroBugAction implements RunAction2 {
     }
 
     public Run getRun() { 
-    	this.srcIframe = URL_RESPONSE + "?token=" + token + "&projectName=" + projectName + "&buildId=" + buildId;
+    	this.srcIframe = URL_RESPONSE + "?token=" + token + "&buildId=" + buildId;
         return run;
     }
 }

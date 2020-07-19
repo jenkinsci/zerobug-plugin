@@ -39,18 +39,20 @@ public class ZeroBugBuilder extends Builder implements SimpleBuildStep {
 		return token;
 	}
 	
-	
 	private String callServiceRest() throws IOException {
 		URL urlConn = new URL(URL_REQUEST);
         URLConnection conn = urlConn.openConnection();
         InputStream is = new BufferedInputStream(conn.getInputStream());
         
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        InputStreamReader inputStreamReader = new InputStreamReader(is);
+        BufferedReader br = new BufferedReader(inputStreamReader);
         String inputLine = "";
         StringBuilder sb = new StringBuilder();
         while ((inputLine = br.readLine()) != null) {
             sb.append(inputLine);
         }
+        inputStreamReader.close();
+        is.close();
         
         return sb.toString();
 	}
@@ -58,11 +60,10 @@ public class ZeroBugBuilder extends Builder implements SimpleBuildStep {
 	@Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
 		String response = callServiceRest();
-    	run.addAction(new ZeroBugAction(token, run.getDisplayName(), run.getId())); 
+    	run.addAction(new ZeroBugAction(token, run.getUrl())); 
     	listener.getLogger().println("URL Request: " + URL_REQUEST);
     	listener.getLogger().println("Token: " + token);
-    	listener.getLogger().println("Project Name: " + run.getId());
-    	listener.getLogger().println("Build Number: " + run.getId());
+    	listener.getLogger().println("Build: " + run.getUrl());
     	
     	listener.getLogger().println("Response: " + response);
     }
@@ -74,9 +75,7 @@ public class ZeroBugBuilder extends Builder implements SimpleBuildStep {
         public FormValidation doCheckName(@QueryParameter String value)
                 throws IOException, ServletException {
             if (value.length() == 0)
-                return FormValidation.error(Messages.HelloWorldBuilder_DescriptorImpl_errors_missingName());
-            if (value.length() < 4)
-                return FormValidation.warning(Messages.HelloWorldBuilder_DescriptorImpl_warnings_tooShort());
+                return FormValidation.error("Please set a Token");
             
             return FormValidation.ok();
         }
@@ -88,7 +87,7 @@ public class ZeroBugBuilder extends Builder implements SimpleBuildStep {
 
         @Override
         public String getDisplayName() {
-            return Messages.HelloWorldBuilder_DescriptorImpl_DisplayName();
+            return "zerobug";
         }
 
     }
