@@ -21,17 +21,19 @@ import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.Builder;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Publisher;
+import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import jenkins.tasks.SimpleBuildStep;
 
-public class ZeroBugBuilder extends Builder implements SimpleBuildStep {
+public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 
     private final String token;
     private final static String URL_REQUEST = "https://api.telegram.org/bot1371039721:AAHU4WBOdFPaQ3jXunlNyy6TAdVL6UWyavA/getUpdates";
 
     @DataBoundConstructor
-    public ZeroBugBuilder(String token) {
+    public ZeroBugPublisher(String token) {
         this.token = token;
     }
 
@@ -40,6 +42,7 @@ public class ZeroBugBuilder extends Builder implements SimpleBuildStep {
 	}
 	
 	private String callServiceRest() throws IOException {
+		
 		URL urlConn = new URL(URL_REQUEST);
         URLConnection conn = urlConn.openConnection();
         InputStream is = new BufferedInputStream(conn.getInputStream());
@@ -70,7 +73,7 @@ public class ZeroBugBuilder extends Builder implements SimpleBuildStep {
 
     @Symbol("greet")
     @Extension
-    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         public FormValidation doCheckToken(@QueryParameter String value)
                 throws IOException, ServletException {
@@ -91,5 +94,11 @@ public class ZeroBugBuilder extends Builder implements SimpleBuildStep {
         }
 
     }
+
+	@Override
+	public BuildStepMonitor getRequiredMonitorService() {
+		// TODO Auto-generated method stub
+		return BuildStepMonitor.NONE;
+	}
 
 }

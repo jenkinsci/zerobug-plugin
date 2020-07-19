@@ -1,9 +1,10 @@
 package io.jenkins.plugins.zerobug;
 
+import hudson.model.Action;
 import hudson.model.Run;
 import jenkins.model.RunAction2;
 
-public class ZeroBugAction implements RunAction2 {
+public class ZeroBugAction implements Action {
 	private transient Run run;
 	
 	private String token;
@@ -42,16 +43,6 @@ public class ZeroBugAction implements RunAction2 {
     @Override
     public String getUrlName() {
         return "zerobug"; 
-    }
-
-    @Override
-    public void onAttached(Run<?, ?> run) {
-        this.run = run; 
-    }
-
-    @Override
-    public void onLoad(Run<?, ?> run) {
-        this.run = run; 
     }
 
     public Run getRun() { 
