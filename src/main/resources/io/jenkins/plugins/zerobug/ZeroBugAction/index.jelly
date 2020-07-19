@@ -1,6 +1,6 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler">
-    <l:layout title="${%ZeroBugPublisher.DescriptorImpl.DisplayName}"> 
+    <l:layout title="${%Title.Page}"> 
     	
  		<st:include it="${it.build}" page="sidepanel.jelly"/>
 

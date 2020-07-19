@@ -20,6 +20,7 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -32,17 +33,23 @@ import jenkins.tasks.SimpleBuildStep;
 public class ZeroBugPublisher extends Recorder {
 
     private final String token;
+    private final boolean onlyBuildSuccess;
     private final static String URL_REQUEST = "https://api.telegram.org/bot1371039721:AAHU4WBOdFPaQ3jXunlNyy6TAdVL6UWyavA/getUpdates";
 
     @DataBoundConstructor
-    public ZeroBugPublisher(String token) {
+    public ZeroBugPublisher(String token, boolean onlyBuildSuccess) {
         this.token = token;
+        this.onlyBuildSuccess = onlyBuildSuccess;
     }
 
 	public String getToken() {
 		return token;
 	}
 	
+	public boolean isOnlyBuildSuccess() {
+		return onlyBuildSuccess;
+	}
+
 	private String callServiceRest() {
 		StringBuilder sb = null;
 		
@@ -71,15 +78,19 @@ public class ZeroBugPublisher extends Recorder {
 
 	@Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener){
-		String response = callServiceRest();
-		build.addAction(new ZeroBugAction(token, build.getUrl(), build)); 
-    	listener.getLogger().println("URL Request: " + URL_REQUEST);
-    	listener.getLogger().println("Token: " + token);
-    	listener.getLogger().println("Build: " + build.getUrl());
+		if((onlyBuildSuccess && Result.SUCCESS == build.getResult()) || !onlyBuildSuccess) {
+			String response = callServiceRest();
+			build.addAction(new ZeroBugAction(token, build.getUrl(), build)); 
+	    	listener.getLogger().println("URL Request: " + URL_REQUEST);
+	    	listener.getLogger().println("Token: " + token);
+	    	listener.getLogger().println("Build: " + build.getUrl());
+	    	
+	    	listener.getLogger().println("Response: " + response);			
+	    	
+	    	return true;
+		}
     	
-    	listener.getLogger().println("Response: " + response);
-    	
-    	return true;
+    	return false;
     }
 
     @Symbol("greet")
