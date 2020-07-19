@@ -13,13 +13,27 @@
     <properties>
         <jenkins.version>2.7.3</jenkins.version>
     </properties>
-    <name>TODO Plugin</name>
-    <licenses>
-        <license>
-            <name>MIT License</name>
-            <url>https://opensource.org/licenses/MIT</url>
-        </license>
-    </licenses>
+    <name>zerobug Plugin</name>
+	<description>Allows users to start security scans via zerobug.</description>
+    <url>https://github.com/jenkinsci/${project.artifactId}</url>
+	<scm>
+		<connection>scm:git:git://github.com/jenkinsci/${project.artifactId}.git</connection>
+		<developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}.git</developerConnection>
+		<url>https://github.com/jenkinsci/${project.artifactId}</url>
+	</scm>
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://raw.githubusercontent.com/jenkinsci/${project.artifactId}/master/LICENSE</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<id>cvfelipeoliveira</id>
+			<name>Felipe Oliveira</name>
+			<email>cvfelipeoliveira@gmail.com</email>
+		</developer>
+	</developers>
     <dependencies>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -69,14 +83,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <!-- Assuming you want to host on @jenkinsci:
-    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <scm>
-        <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-        <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    </scm>
-    -->
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>
