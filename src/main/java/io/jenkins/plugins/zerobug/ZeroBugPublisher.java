@@ -17,7 +17,9 @@ import org.kohsuke.stapler.QueryParameter;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -27,7 +29,7 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import jenkins.tasks.SimpleBuildStep;
 
-public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
+public class ZeroBugPublisher extends Recorder {
 
     private final String token;
     private final static String URL_REQUEST = "https://api.telegram.org/bot1371039721:AAHU4WBOdFPaQ3jXunlNyy6TAdVL6UWyavA/getUpdates";
@@ -41,34 +43,43 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		return token;
 	}
 	
-	private String callServiceRest() throws IOException {
+	private String callServiceRest() {
+		StringBuilder sb = null;
 		
-		URL urlConn = new URL(URL_REQUEST);
-        URLConnection conn = urlConn.openConnection();
-        InputStream is = new BufferedInputStream(conn.getInputStream());
-        
-        InputStreamReader inputStreamReader = new InputStreamReader(is);
-        BufferedReader br = new BufferedReader(inputStreamReader);
-        String inputLine = "";
-        StringBuilder sb = new StringBuilder();
-        while ((inputLine = br.readLine()) != null) {
-            sb.append(inputLine);
-        }
-        inputStreamReader.close();
-        is.close();
-        
+		try {
+			URL urlConn = new URL(URL_REQUEST);
+	        URLConnection conn;
+			conn = urlConn.openConnection();
+			InputStream is = new BufferedInputStream(conn.getInputStream());
+	        
+	        InputStreamReader inputStreamReader = new InputStreamReader(is);
+	        BufferedReader br = new BufferedReader(inputStreamReader);
+	        String inputLine = "";
+	        sb = new StringBuilder();
+	        while ((inputLine = br.readLine()) != null) {
+	            sb.append(inputLine);
+	        }
+	        inputStreamReader.close();
+	        is.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+                
         return sb.toString();
 	}
 
 	@Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener){
 		String response = callServiceRest();
-    	run.addAction(new ZeroBugAction(token, run.getUrl())); 
+		build.addAction(new ZeroBugAction(token, build.getUrl(), build)); 
     	listener.getLogger().println("URL Request: " + URL_REQUEST);
     	listener.getLogger().println("Token: " + token);
-    	listener.getLogger().println("Build: " + run.getUrl());
+    	listener.getLogger().println("Build: " + build.getUrl());
     	
     	listener.getLogger().println("Response: " + response);
+    	
+    	return true;
     }
 
     @Symbol("greet")
@@ -78,7 +89,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
         public FormValidation doCheckToken(@QueryParameter String value)
                 throws IOException, ServletException {
             if (value.length() == 0)
-                return FormValidation.error("Please set a Token");
+                return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_errors_missingToken());
             
             return FormValidation.ok();
         }
@@ -90,14 +101,13 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 
         @Override
         public String getDisplayName() {
-            return "zerobug";
+            return Messages.ZeroBugPublisher_DescriptorImpl_DisplayName();
         }
 
     }
 
 	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
-		// TODO Auto-generated method stub
 		return BuildStepMonitor.NONE;
 	}
 

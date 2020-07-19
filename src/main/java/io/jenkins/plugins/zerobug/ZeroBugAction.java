@@ -1,11 +1,10 @@
 package io.jenkins.plugins.zerobug;
 
+import hudson.model.AbstractBuild;
 import hudson.model.Action;
-import hudson.model.Run;
-import jenkins.model.RunAction2;
 
 public class ZeroBugAction implements Action {
-	private transient Run run;
+//	private transient Run run;
 	
 	private String token;
 	private String buildId;
@@ -13,9 +12,17 @@ public class ZeroBugAction implements Action {
 	
 	private final static String URL_RESPONSE = "https://plugins.jenkins.io";
 
-    public ZeroBugAction(String token, String buildId) {
+	
+	private AbstractBuild<?, ?> build;
+	
+	public AbstractBuild<?, ?> getBuild() {
+        return build;
+    }
+	
+    public ZeroBugAction(String token, String buildId, final AbstractBuild<?, ?> build) {
     	this.token = token;
         this.buildId = buildId;
+        this.build = build;
     }
 
 	public String getToken() {
@@ -27,6 +34,7 @@ public class ZeroBugAction implements Action {
 	}
 
 	public String getSrcIframe() {
+		this.srcIframe = URL_RESPONSE + "?token=" + token + "&buildId=" + buildId;
 		return srcIframe;
 	}
 
@@ -45,8 +53,4 @@ public class ZeroBugAction implements Action {
         return "zerobug"; 
     }
 
-    public Run getRun() { 
-    	this.srcIframe = URL_RESPONSE + "?token=" + token + "&buildId=" + buildId;
-        return run;
-    }
 }
