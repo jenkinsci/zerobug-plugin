@@ -4,9 +4,9 @@
     	<l:side-panel> 
             <st:include page="sidepanel.jelly" it="${it.run}" optional="true" /> 
         </l:side-panel>
-        <l:main-panel> 
-               
-              <iframe src="${it.srcIframe}" style="left:0; top:0; width:100%; height:100%"></iframe>
+        <l:main-panel>
+        	  <p><h1>Dashboard zerobug</h1></p>
+              <iframe src="${it.srcIframe}" style="width:100%; height:500px"></iframe>
         </l:main-panel>
           
     </l:layout>
