@@ -4,8 +4,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.Action;
 
 public class ZeroBugAction implements Action {
-//	private transient Run run;
-	
 	private String token;
 	private String buildId;
 	private String srcIframe;
