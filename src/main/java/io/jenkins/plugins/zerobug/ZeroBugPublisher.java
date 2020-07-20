@@ -27,7 +27,7 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import io.jenkins.plugins.zerobug.commons.Property;
 
-public class ZeroBugPublisher extends Recorder {
+public class ZeroBugPublisher extends Recorder  {
 
 	private final String token;
 	private final boolean onlyBuildSuccess;

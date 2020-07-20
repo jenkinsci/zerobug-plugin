@@ -7,17 +7,8 @@ import hudson.model.Action;
 import io.jenkins.plugins.zerobug.commons.Property;
 
 public class ZeroBugAction implements Action {
-	/**
-	 * token variable.
-	 */
 	private String token;
-	/**
-	 * buildId variable.
-	 */
 	private String buildId;
-	/**
-	 * srcIframe variable.
-	 */
 	private String srcIframe;
 	private AbstractBuild<?, ?> build;
 
