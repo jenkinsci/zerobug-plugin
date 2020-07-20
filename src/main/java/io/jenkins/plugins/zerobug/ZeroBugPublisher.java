@@ -10,6 +10,7 @@ import java.net.URLConnection;
 
 import javax.servlet.ServletException;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -69,6 +70,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		return stringBuilder.toString();
 	}
 
+	@Symbol("zerobug")
 	@Extension
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 		public FormValidation doCheckToken(@QueryParameter final String value) throws IOException, ServletException {
