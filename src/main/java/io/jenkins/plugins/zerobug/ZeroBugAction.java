@@ -4,10 +4,11 @@ import java.io.IOException;
 
 import hudson.model.Action;
 import hudson.model.Run;
+import hudson.util.Secret;
 import io.jenkins.plugins.zerobug.commons.Property;
 
 public class ZeroBugAction implements Action {
-	private String token;
+	private Secret token;
 	private String buildId;
 	private String srcIframe;
 	private Run<?, ?> run;
@@ -16,13 +17,13 @@ public class ZeroBugAction implements Action {
 		return run;
 	}
 
-	public ZeroBugAction(final String token, final String buildId, final Run<?, ?> run) {
+	public ZeroBugAction(final Secret token, final String buildId, final Run<?, ?> run) {
 		this.token = token;
 		this.buildId = buildId;
 		this.run = run;
 	}
 
-	public String getToken() {
+	public Secret getToken() {
 		return token;
 	}
 

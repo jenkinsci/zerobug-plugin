@@ -26,21 +26,22 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
+import hudson.util.Secret;
 import io.jenkins.plugins.zerobug.commons.Property;
 import jenkins.tasks.SimpleBuildStep;
 
 public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 
-	private final String token;
+	private final Secret token;
 	private final boolean onlyBuildSuccess;
 
 	@DataBoundConstructor
-	public ZeroBugPublisher(final String token, final boolean onlyBuildSuccess) {
+	public ZeroBugPublisher(final Secret token, final boolean onlyBuildSuccess) {
 		this.token = token;
 		this.onlyBuildSuccess = onlyBuildSuccess;
 	}
 
-	public String getToken() {
+	public Secret getToken() {
 		return token;
 	}
 
@@ -70,9 +71,15 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		return stringBuilder.toString();
 	}
 
-	@Symbol("zerobug")
+	@Symbol("ZeroBugPublisher")
 	@Extension
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+
+		public DescriptorImpl() {
+			super(ZeroBugPublisher.class);
+			load();
+		}
+
 		public FormValidation doCheckToken(@QueryParameter final String value) throws IOException, ServletException {
 			if (value.length() == 0) {
 				return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_errors_missingToken());
@@ -89,6 +96,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		public String getDisplayName() {
 			return Messages.ZeroBugPublisher_DescriptorImpl_DisplayName();
 		}
+
 	}
 
 	@Override
@@ -99,9 +107,11 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 	@Override
 	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
 			throws InterruptedException, IOException {
+		
 		if ((onlyBuildSuccess && Result.SUCCESS == run.getResult()) || !onlyBuildSuccess) {
 			String response = callServiceRest();
 			run.addAction(new ZeroBugAction(token, run.getUrl(), run));
+			listener.getLogger().println(Secret.toString(token));
 			listener.getLogger().println(response);
 		}
 	}
