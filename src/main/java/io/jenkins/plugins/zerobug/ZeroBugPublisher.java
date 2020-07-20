@@ -47,29 +47,28 @@ public class ZeroBugPublisher extends Recorder {
 	}
 
 	private String callServiceRest() {
-		StringBuilder sb = null;
+		StringBuilder stringBuilder = new StringBuilder();
 		
 		try {
 			URL urlConn = new URL(URL_REQUEST);
-	        URLConnection conn;
-			conn = urlConn.openConnection();
-			InputStream is = new BufferedInputStream(conn.getInputStream());
+	        URLConnection urlConnection = urlConn.openConnection();
+			InputStream inputStream = new BufferedInputStream(urlConnection.getInputStream());
 	        
-	        InputStreamReader inputStreamReader = new InputStreamReader(is);
-	        BufferedReader br = new BufferedReader(inputStreamReader);
+	        InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+	        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 	        String inputLine = "";
-	        sb = new StringBuilder();
-	        while ((inputLine = br.readLine()) != null) {
-	            sb.append(inputLine);
+	        while ((inputLine = bufferedReader.readLine()) != null) {
+	        	stringBuilder.append(inputLine);
 	        }
+	        bufferedReader.close();
 	        inputStreamReader.close();
-	        is.close();
+	        inputStream.close();
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
                 
-        return sb.toString();
+        return stringBuilder.toString();
 	}
 
 	@Override
