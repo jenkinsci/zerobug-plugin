@@ -76,11 +76,7 @@ public class ZeroBugPublisher extends Recorder {
 		if((onlyBuildSuccess && Result.SUCCESS == build.getResult()) || !onlyBuildSuccess) {
 			String response = callServiceRest();
 			build.addAction(new ZeroBugAction(token, build.getUrl(), build)); 
-	    	listener.getLogger().println("URL Request: " + URL_REQUEST);
-	    	listener.getLogger().println("Token: " + token);
-	    	listener.getLogger().println("Build: " + build.getUrl());
-	    	
-	    	listener.getLogger().println("Response: " + response);			
+	    	listener.getLogger().println(response);			
 	    	
 	    	return true;
 		}
