@@ -2,24 +2,24 @@ package io.jenkins.plugins.zerobug;
 
 import java.io.IOException;
 
-import hudson.model.AbstractBuild;
 import hudson.model.Action;
+import hudson.model.Run;
 import io.jenkins.plugins.zerobug.commons.Property;
 
 public class ZeroBugAction implements Action {
 	private String token;
 	private String buildId;
 	private String srcIframe;
-	private AbstractBuild<?, ?> build;
+	private Run<?, ?> run;
 
-	public AbstractBuild<?, ?> getBuild() {
-		return build;
+	public Run<?, ?> getRun() {
+		return run;
 	}
 
-	public ZeroBugAction(final String token, final String buildId, final AbstractBuild<?, ?> build) {
+	public ZeroBugAction(final String token, final String buildId, final Run<?, ?> run) {
 		this.token = token;
 		this.buildId = buildId;
-		this.build = build;
+		this.run = run;
 	}
 
 	public String getToken() {
