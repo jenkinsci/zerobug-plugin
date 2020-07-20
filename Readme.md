@@ -11,23 +11,9 @@ reports in Jenkins 
 
 ## Features
 
-### Global Settings
+### Settings
 
-zerobug plugin needs the admin user to define the API settings
-only once.
-
-![](ss/jenkins_global_settings.png)
-
-### Global Settings Override
-
-Global settings can be overridden in pipeline scripts by
-giving ncApiToken and/or ncServerURL parameters.
-
-#### Example Script
-
-step([$class: 'NCScanBuilder', ncScanType: 'FullWithPrimaryProfile', ncWebsiteId: '19011b1b-4141-4331-8514-ab4102a4c135'])
-
-![](ss/NE_jenkins_new_integration.png)
+zerobug plugin needs a valid token.
 
 ### Scan Settings
 
@@ -42,7 +28,6 @@ can easily select relevant settings.
  Once your initiated scan is completed, you can easily see your
 executive scan report on the build result window.
 
-![](ss/jenkins_scan_report.png)
 
 ## Requirements
 
@@ -59,5 +44,4 @@ needs to be satisfied:
 
 zerobug Plugin documentation is available at:
 
-<https://www.google.comm>
 
