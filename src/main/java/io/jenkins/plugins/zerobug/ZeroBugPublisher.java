@@ -25,88 +25,80 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
+import io.jenkins.plugins.zerobug.commons.Property;
 
 public class ZeroBugPublisher extends Recorder {
 
-    private final String token;
-    private final boolean onlyBuildSuccess;
-    private final static String URL_REQUEST = "https://api.telegram.org/bot1371039721:AAHU4WBOdFPaQ3jXunlNyy6TAdVL6UWyavA/getUpdates";
+	private final String token;
+	private final boolean onlyBuildSuccess;
 
-    @DataBoundConstructor
-    public ZeroBugPublisher(String token, boolean onlyBuildSuccess) {
-        this.token = token;
-        this.onlyBuildSuccess = onlyBuildSuccess;
-    }
+	@DataBoundConstructor
+	public ZeroBugPublisher(final String token, final boolean onlyBuildSuccess) {
+		this.token = token;
+		this.onlyBuildSuccess = onlyBuildSuccess;
+	}
 
 	public String getToken() {
 		return token;
 	}
-	
+
 	public boolean isOnlyBuildSuccess() {
 		return onlyBuildSuccess;
 	}
 
 	private String callServiceRest() {
 		StringBuilder stringBuilder = new StringBuilder();
-		
-		try {
-			URL urlConn = new URL(URL_REQUEST);
-	        URLConnection urlConnection = urlConn.openConnection();
-			InputStream inputStream = new BufferedInputStream(urlConnection.getInputStream());
-	        
-	        InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
-	        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-	        String inputLine = "";
-	        while ((inputLine = bufferedReader.readLine()) != null) {
-	        	stringBuilder.append(inputLine);
-	        }
-	        bufferedReader.close();
-	        inputStreamReader.close();
-	        inputStream.close();
 
+		try {
+			URL urlConn = new URL(Property.getByKey("url.request"));
+			URLConnection urlConnection = urlConn.openConnection();
+			InputStream inputStream = new BufferedInputStream(urlConnection.getInputStream());
+			InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+			BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+			String inputLine = "";
+			while ((inputLine = bufferedReader.readLine()) != null) {
+				stringBuilder.append(inputLine);
+			}
+			bufferedReader.close();
+			inputStreamReader.close();
+			inputStream.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-                
-        return stringBuilder.toString();
+		return stringBuilder.toString();
 	}
 
 	@Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener){
-		if((onlyBuildSuccess && Result.SUCCESS == build.getResult()) || !onlyBuildSuccess) {
+	public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+		if ((onlyBuildSuccess && Result.SUCCESS == build.getResult()) || !onlyBuildSuccess) {
 			String response = callServiceRest();
-			build.addAction(new ZeroBugAction(token, build.getUrl(), build)); 
-	    	listener.getLogger().println(response);			
-	    	
-	    	return true;
+			build.addAction(new ZeroBugAction(token, build.getUrl(), build));
+			listener.getLogger().println(response);
+			return true;
 		}
-    	
-    	return false;
-    }
+		return false;
+	}
 
-    @Symbol("greet")
-    @Extension
-    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+	@Symbol("greet")
+	@Extension
+	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+		public FormValidation doCheckToken(@QueryParameter final String value) throws IOException, ServletException {
+			if (value.length() == 0) {
+				return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_errors_missingToken());
+			}
+			return FormValidation.ok();
+		}
 
-        public FormValidation doCheckToken(@QueryParameter String value)
-                throws IOException, ServletException {
-            if (value.length() == 0)
-                return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_errors_missingToken());
-            
-            return FormValidation.ok();
-        }
+		@Override
+		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+			return true;
+		}
 
-        @Override
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            return true;
-        }
-
-        @Override
-        public String getDisplayName() {
-            return Messages.ZeroBugPublisher_DescriptorImpl_DisplayName();
-        }
-
-    }
+		@Override
+		public String getDisplayName() {
+			return Messages.ZeroBugPublisher_DescriptorImpl_DisplayName();
+		}
+	}
 
 	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
