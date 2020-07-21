@@ -1,12 +1,6 @@
 package io.jenkins.plugins.zerobug;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 
 import javax.servlet.ServletException;
 
@@ -26,8 +20,6 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
-import hudson.model.ParameterValue;
-import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -45,18 +37,21 @@ import net.sf.json.JSONObject;
 
 public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 
-	private final Secret token;
+	private Secret token;
 	private final String webSite;
 	private final boolean onlyBuildSuccess;
 
 	@DataBoundConstructor
-	public ZeroBugPublisher(final Secret token, final String webSite, final boolean onlyBuildSuccess) {
-		this.token = token;
+	public ZeroBugPublisher(final String webSite, final boolean onlyBuildSuccess) {
+		this.token = getToken();
 		this.webSite = webSite;
 		this.onlyBuildSuccess = onlyBuildSuccess;
 	}
 
 	public Secret getToken() {
+		if (token == null) {
+			token = getDescriptor().getToken();
+		}
 		return token;
 	}
 
@@ -68,14 +63,20 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		return onlyBuildSuccess;
 	}
 
+	@Override
+	public DescriptorImpl getDescriptor() {
+		return (DescriptorImpl) super.getDescriptor();
+	}
+
 	@Symbol("ZeroBugPublisher")
 	@Extension
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		private Secret token;
 		private String webSite;
+		private String buildId;
 		private boolean onlyBuildSuccess;
-		
+
 		public DescriptorImpl() {
 			super(ZeroBugPublisher.class);
 			load();
@@ -88,13 +89,21 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		public void setToken(Secret token) {
 			this.token = token;
 		}
-		
+
 		public String getWebSite() {
 			return webSite;
 		}
 
 		public void setWebSite(String webSite) {
 			this.webSite = webSite;
+		}
+
+		public String getBuildId() {
+			return buildId;
+		}
+
+		public void setBuildId(String buildId) {
+			this.buildId = buildId;
 		}
 
 		public boolean isOnlyBuildSuccess() {
@@ -106,6 +115,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		}
 
 		public ListBoxModel doFillWebSiteItems() throws IOException {
+			System.out.println(this.token);
 			ListBoxModel items = new ListBoxModel();
 			CloseableHttpClient httpClient = null;
 			CloseableHttpResponse response = null;
@@ -113,11 +123,11 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 				httpClient = HttpClients.createDefault();
 				HttpGet request = new HttpGet(Property.getByKey("url.get.list.site"));
 				response = httpClient.execute(request);
-				
+
 				HttpEntity entity = response.getEntity();
-	            if (entity != null) {
-	                String result = EntityUtils.toString(entity);
-	            }
+				if (entity != null) {
+					String result = EntityUtils.toString(entity);
+				}
 
 				items.add("http://www.google.com", "1");
 				items.add("http://www.globo.com", "2");
@@ -205,6 +215,12 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 				HttpGet request = new HttpGet(Property.getByKey("url.request"));
 				httpClient.execute(request);
 				run.addAction(new ZeroBugAction(token, webSite, run.getUrl(), run));
+
+				listener.getLogger().println(token);
+				listener.getLogger().println(webSite);
+				listener.getLogger().println(run.getUrl());
+				listener.getLogger().println(run);
+
 			} finally {
 				httpClient.close();
 			}
