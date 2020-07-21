@@ -9,6 +9,7 @@ import io.jenkins.plugins.zerobug.commons.Property;
 
 public class ZeroBugAction implements Action {
 	private Secret token;
+	private String webSite;
 	private String buildId;
 	private String srcIframe;
 	private Run<?, ?> run;
@@ -17,8 +18,9 @@ public class ZeroBugAction implements Action {
 		return run;
 	}
 
-	public ZeroBugAction(final Secret token, final String buildId, final Run<?, ?> run) {
+	public ZeroBugAction(final Secret token, final String webSite, final String buildId, final Run<?, ?> run) {
 		this.token = token;
+		this.webSite = webSite;
 		this.buildId = buildId;
 		this.run = run;
 	}
@@ -26,13 +28,17 @@ public class ZeroBugAction implements Action {
 	public Secret getToken() {
 		return token;
 	}
+	
+	public String getWebSite() {
+		return webSite;
+	}
 
 	public String getBuildId() {
 		return buildId;
 	}
 
 	public String getSrcIframe() throws IOException {
-		this.srcIframe = Property.getByKey("url.response");
+		this.srcIframe = Property.getByKey("url.iframe");
 		return srcIframe;
 	}
 

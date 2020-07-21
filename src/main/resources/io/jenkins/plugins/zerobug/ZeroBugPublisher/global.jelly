@@ -1,0 +1,13 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <f:section title="${%Title}">
+
+	    <f:entry title="${%Token}" field="token">
+	        <f:password checkMethod="post"/>
+	    </f:entry>
+
+        <f:validateButton title="${%Button.Connection.Label}" progress="${%Button.Connection.Message}" method="validateConnection" with="token"/>
+
+    </f:section>
+</j:jelly>
