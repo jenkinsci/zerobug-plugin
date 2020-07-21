@@ -44,7 +44,7 @@ public class ZeroBugAction implements Action {
 
 	@Override
 	public String getIconFileName() {
-		return "monitor.png";
+		return "/plugin/zerobug/img/zerobug-ico.png";
 	}
 
 	@Override
