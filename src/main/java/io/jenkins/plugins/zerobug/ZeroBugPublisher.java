@@ -38,12 +38,14 @@ import net.sf.json.JSONObject;
 public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 
 	private Secret token;
+	private final String buildId;
 	private final String webSite;
 	private final boolean onlyBuildSuccess;
 
 	@DataBoundConstructor
-	public ZeroBugPublisher(final String webSite, final boolean onlyBuildSuccess) {
+	public ZeroBugPublisher(final String buildId, final String webSite, final boolean onlyBuildSuccess) {
 		this.token = getToken();
+		this.buildId = buildId;
 		this.webSite = webSite;
 		this.onlyBuildSuccess = onlyBuildSuccess;
 	}
@@ -53,6 +55,10 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 			token = getDescriptor().getToken();
 		}
 		return token;
+	}
+	
+	public String getBuildId() {
+		return buildId;
 	}
 
 	public String getWebSite() {
