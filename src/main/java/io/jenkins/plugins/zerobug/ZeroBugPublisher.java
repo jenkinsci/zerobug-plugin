@@ -117,16 +117,15 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		public ListBoxModel doFillWebSiteItems() throws IOException {
 			System.out.println(this.token);
 			ListBoxModel items = new ListBoxModel();
-			CloseableHttpClient httpClient = null;
-			CloseableHttpResponse response = null;
+			CloseableHttpClient httpClient = HttpClients.createDefault();
 			try {
-				httpClient = HttpClients.createDefault();
 				HttpGet request = new HttpGet(Property.getByKey("url.get.list.site"));
-				response = httpClient.execute(request);
+				CloseableHttpResponse response = httpClient.execute(request);
 
 				HttpEntity entity = response.getEntity();
 				if (entity != null) {
 					String result = EntityUtils.toString(entity);
+					items.add(result, "0");
 				}
 
 				items.add("http://www.google.com", "1");
@@ -135,7 +134,6 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 				items.add("http://www.java.com", "4");
 
 			} finally {
-				response.close();
 				httpClient.close();
 			}
 
@@ -165,12 +163,10 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		}
 
 		private FormValidation validateConnection(final String token) throws IOException {
-			CloseableHttpClient httpClient = null;
-			CloseableHttpResponse response = null;
+			CloseableHttpClient httpClient = HttpClients.createDefault();
 			try {
-				httpClient = HttpClients.createDefault();
 				HttpGet request = new HttpGet(Property.getByKey("url.get.list.site"));
-				response = httpClient.execute(request);
+				CloseableHttpResponse response = httpClient.execute(request);
 
 				if (response.getStatusLine().getStatusCode() == 200) {
 					return FormValidation.ok(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Success());
@@ -182,7 +178,6 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 				return FormValidation
 						.error(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Error() + e.toString());
 			} finally {
-				response.close();
 				httpClient.close();
 			}
 		}
@@ -209,9 +204,8 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 			throws InterruptedException, IOException {
 
 		if ((onlyBuildSuccess && Result.SUCCESS == run.getResult()) || !onlyBuildSuccess) {
-			CloseableHttpClient httpClient = null;
+			CloseableHttpClient httpClient = HttpClients.createDefault();
 			try {
-				httpClient = HttpClients.createDefault();
 				HttpGet request = new HttpGet(Property.getByKey("url.request"));
 				httpClient.execute(request);
 				run.addAction(new ZeroBugAction(token, webSite, run.getUrl(), run));
