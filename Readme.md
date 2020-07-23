@@ -17,14 +17,9 @@ only once.
 
 ![](wiki/global_config.png)
 
-### Global Settings Override
+### Pipeline Script
 
-Global settings can be overridden in pipeline scripts by
-giving webSite, buildId and onlyBuildSuccess parameters.
-
-#### Example Script
-
-step([$class: 'ZeroBugPublisher', webSite : 'https://google.com', buildId : 'job123', onlyBuildSuccess: true])
+step([$class: 'ZeroBugPublisher', webSite : 'https://google.com'])
 
 
 ### Scan Settings

@@ -1,9 +1,12 @@
 package io.jenkins.plugins.zerobug;
 
 import java.io.IOException;
+import java.time.LocalDate;
 
 import javax.servlet.ServletException;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -38,14 +41,12 @@ import net.sf.json.JSONObject;
 public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 
 	private Secret token;
-	private final String buildId;
 	private final String webSite;
 	private final boolean onlyBuildSuccess;
 
 	@DataBoundConstructor
-	public ZeroBugPublisher(final String buildId, final String webSite, final boolean onlyBuildSuccess) {
+	public ZeroBugPublisher(final String webSite, final boolean onlyBuildSuccess) {
 		this.token = getToken();
-		this.buildId = buildId;
 		this.webSite = webSite;
 		this.onlyBuildSuccess = onlyBuildSuccess;
 	}
@@ -57,10 +58,6 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		return token;
 	}
 	
-	public String getBuildId() {
-		return buildId;
-	}
-
 	public String getWebSite() {
 		return webSite;
 	}
@@ -74,14 +71,58 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		return (DescriptorImpl) super.getDescriptor();
 	}
 
+	@Override
+	public BuildStepMonitor getRequiredMonitorService() {
+		return BuildStepMonitor.NONE;
+	}
+	
+	private String generateBuildId(String token, String webSite) {
+		String password = token + webSite + LocalDate.now();
+		return DigestUtils.md5Hex(password).toUpperCase();
+	}
+
+	@Override
+	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
+			throws InterruptedException, IOException {
+		
+		if(StringUtils.isBlank(Secret.toString(token))) {
+			listener.getLogger().println(Messages.ZeroBugPublisher_DescriptorImpl_errors_missingToken());
+			run.setResult(Result.FAILURE);
+		}
+		
+		if(StringUtils.isBlank(webSite)) {
+			listener.getLogger().println(Messages.ZeroBugPublisher_DescriptorImpl_errors_missingWebsite());
+			run.setResult(Result.FAILURE);
+		}
+
+		if ((onlyBuildSuccess && Result.SUCCESS == run.getResult()) || !onlyBuildSuccess) {
+			CloseableHttpClient httpClient = HttpClients.createDefault();
+			try {
+				String buildId = generateBuildId(Secret.toString(token), webSite);
+				
+				HttpGet request = new HttpGet(Property.getByKey("url.request"));
+				httpClient.execute(request);
+				
+				run.addAction(new ZeroBugAction(token, webSite, buildId, run));
+
+				listener.getLogger().println("token " + token);
+				listener.getLogger().println("webSite " + webSite);
+				listener.getLogger().println("buildId " + buildId);
+				listener.getLogger().println("onlyBuildSuccess " + onlyBuildSuccess);
+
+			} finally {
+				httpClient.close();
+			}
+		}
+	}
+	
+	
 	@Symbol("ZeroBugPublisher")
 	@Extension
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		private Secret token;
 		private String webSite;
-		private String buildId;
-		private boolean onlyBuildSuccess;
 
 		public DescriptorImpl() {
 			super(ZeroBugPublisher.class);
@@ -104,43 +145,28 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 			this.webSite = webSite;
 		}
 
-		public String getBuildId() {
-			return buildId;
-		}
-
-		public void setBuildId(String buildId) {
-			this.buildId = buildId;
-		}
-
-		public boolean isOnlyBuildSuccess() {
-			return onlyBuildSuccess;
-		}
-
-		public void setOnlyBuildSuccess(boolean onlyBuildSuccess) {
-			this.onlyBuildSuccess = onlyBuildSuccess;
-		}
-
 		public ListBoxModel doFillWebSiteItems() throws IOException {
-			System.out.println(this.token);
 			ListBoxModel items = new ListBoxModel();
-			CloseableHttpClient httpClient = HttpClients.createDefault();
-			try {
-				HttpGet request = new HttpGet(Property.getByKey("url.get.list.site"));
-				CloseableHttpResponse response = httpClient.execute(request);
+			if(!StringUtils.isBlank(Secret.toString(this.token))) {
+				CloseableHttpClient httpClient = HttpClients.createDefault();
+				try {
+					HttpGet request = new HttpGet(Property.getByKey("url.get.list.site"));
+					CloseableHttpResponse response = httpClient.execute(request);
 
-				HttpEntity entity = response.getEntity();
-				if (entity != null) {
-					String result = EntityUtils.toString(entity);
-					items.add(result, "0");
+					HttpEntity entity = response.getEntity();
+					if (entity != null) {
+						String result = EntityUtils.toString(entity);
+						items.add(result, "0");
+					}
+
+					items.add("http://www.google.com", "1");
+					items.add("http://www.globo.com", "2");
+					items.add("http://www.jenkins.com", "3");
+					items.add("http://www.java.com", "4");
+
+				} finally {
+					httpClient.close();
 				}
-
-				items.add("http://www.google.com", "1");
-				items.add("http://www.globo.com", "2");
-				items.add("http://www.jenkins.com", "3");
-				items.add("http://www.java.com", "4");
-
-			} finally {
-				httpClient.close();
 			}
 
 			return items;
@@ -165,6 +191,10 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		@SuppressWarnings("unused")
 		public FormValidation doValidateConnection(@QueryParameter final String token) throws IOException {
 			Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+			if(StringUtils.isBlank(token)) {
+				return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_errors_missingToken());
+			}
+			
 			return validateConnection(token);
 		}
 
@@ -198,33 +228,6 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 			return Messages.ZeroBugPublisher_DescriptorImpl_DisplayName();
 		}
 
-	}
-
-	@Override
-	public BuildStepMonitor getRequiredMonitorService() {
-		return BuildStepMonitor.NONE;
-	}
-
-	@Override
-	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-			throws InterruptedException, IOException {
-
-		if ((onlyBuildSuccess && Result.SUCCESS == run.getResult()) || !onlyBuildSuccess) {
-			CloseableHttpClient httpClient = HttpClients.createDefault();
-			try {
-				HttpGet request = new HttpGet(Property.getByKey("url.request"));
-				httpClient.execute(request);
-				run.addAction(new ZeroBugAction(token, webSite, run.getUrl(), run));
-
-				listener.getLogger().println(token);
-				listener.getLogger().println(webSite);
-				listener.getLogger().println(run.getUrl());
-				listener.getLogger().println(run);
-
-			} finally {
-				httpClient.close();
-			}
-		}
 	}
 
 }
