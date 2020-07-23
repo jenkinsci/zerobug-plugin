@@ -192,7 +192,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		public FormValidation doValidateConnection(@QueryParameter final String token) throws IOException {
 			Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 			if(StringUtils.isBlank(token)) {
-				return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Reject());
+				return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Error());
 			}
 			
 			return validateConnection(token);
