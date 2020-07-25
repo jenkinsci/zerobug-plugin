@@ -10,6 +10,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -57,7 +59,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		}
 		return token;
 	}
-	
+
 	public String getWebSite() {
 		return webSite;
 	}
@@ -75,7 +77,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.NONE;
 	}
-	
+
 	private String generateBuildId(String token, String webSite) {
 		String password = token + webSite + LocalDate.now();
 		return DigestUtils.md5Hex(password).toUpperCase();
@@ -84,13 +86,13 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 	@Override
 	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
 			throws InterruptedException, IOException {
-		
-		if(StringUtils.isBlank(Secret.toString(token))) {
+
+		if (StringUtils.isBlank(Secret.toString(token))) {
 			listener.getLogger().println(Messages.ZeroBugPublisher_DescriptorImpl_errors_missingToken());
 			run.setResult(Result.FAILURE);
 		}
-		
-		if(StringUtils.isBlank(webSite)) {
+
+		if (StringUtils.isBlank(webSite)) {
 			listener.getLogger().println(Messages.ZeroBugPublisher_DescriptorImpl_errors_missingWebsite());
 			run.setResult(Result.FAILURE);
 		}
@@ -99,10 +101,10 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 			CloseableHttpClient httpClient = HttpClients.createDefault();
 			try {
 				String buildId = generateBuildId(Secret.toString(token), webSite);
-				
+
 				HttpGet request = new HttpGet(Property.getByKey("url.request"));
 				httpClient.execute(request);
-				
+
 				run.addAction(new ZeroBugAction(token, webSite, buildId, run));
 
 				listener.getLogger().println("token " + token);
@@ -115,8 +117,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 			}
 		}
 	}
-	
-	
+
 	@Symbol("ZeroBugPublisher")
 	@Extension
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
@@ -147,7 +148,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 
 		public ListBoxModel doFillWebSiteItems() throws IOException {
 			ListBoxModel items = new ListBoxModel();
-			if(!StringUtils.isBlank(Secret.toString(this.token))) {
+			if (!StringUtils.isBlank(Secret.toString(this.token))) {
 				CloseableHttpClient httpClient = HttpClients.createDefault();
 				try {
 					HttpGet request = new HttpGet(Property.getByKey("url.get.list.site"));
@@ -191,21 +192,29 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		@SuppressWarnings("unused")
 		public FormValidation doValidateConnection(@QueryParameter final String token) throws IOException {
 			Jenkins.get().checkPermission(Jenkins.ADMINISTER);
-			if(StringUtils.isBlank(token)) {
+			if (StringUtils.isBlank(token)) {
 				return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Error());
 			}
-			
+
 			return validateConnection(token);
 		}
 
 		private FormValidation validateConnection(final String token) throws IOException {
 			CloseableHttpClient httpClient = HttpClients.createDefault();
 			try {
-				HttpGet request = new HttpGet(Property.getByKey("url.get.list.site"));
-				CloseableHttpResponse response = httpClient.execute(request);
+				HttpPost httpPost = new HttpPost(Property.getByKey("url.valid.token"));
+				StringEntity entity = new StringEntity("token=" + token);
+				httpPost.setEntity(entity);
+				httpPost.setHeader("Content-type", "application/x-www-form-urlencoded");
+				CloseableHttpResponse response = httpClient.execute(httpPost);
 
 				if (response.getStatusLine().getStatusCode() == 200) {
-					return FormValidation.ok(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Success());
+					String result = EntityUtils.toString(response.getEntity());
+					if ("ok".equalsIgnoreCase(result)) {
+						return FormValidation.ok(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Success());
+					} else {
+						return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_errors_invalidToken());
+					}
 				} else {
 					return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Reject()
 							+ response.getStatusLine().getStatusCode());
