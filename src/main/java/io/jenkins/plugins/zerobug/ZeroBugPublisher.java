@@ -217,11 +217,11 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 					}
 				} else {
 					return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Reject()
-							+ response.getStatusLine().getStatusCode());
+							+ " " + response.getStatusLine().getStatusCode());
 				}
 			} catch (Exception e) {
 				return FormValidation
-						.error(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Error() + e.toString());
+						.error(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Error() + " " + e.toString());
 			} finally {
 				httpClient.close();
 			}
