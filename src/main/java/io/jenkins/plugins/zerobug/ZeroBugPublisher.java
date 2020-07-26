@@ -8,7 +8,6 @@ import javax.servlet.ServletException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -43,6 +42,8 @@ import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 
 public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
+
+	private final static String INVALID_TOKEN = "no";
 
 	private Secret token;
 	private final String webSite;
@@ -104,16 +105,29 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 			try {
 				String buildId = generateBuildId(Secret.toString(token), webSite);
 
-				HttpGet request = new HttpGet(Property.getByKey("url.request"));
-				httpClient.execute(request);
+				listener.getLogger().println("INFO: Token - " + token);
+				listener.getLogger().println("INFO: Web Site ID - " + webSite);
+				listener.getLogger().println("INFO: Build ID - " + buildId);
+				listener.getLogger().println("INFO: Only Build Success - " + onlyBuildSuccess);
 
-				run.addAction(new ZeroBugAction(token, webSite, buildId, run));
+				HttpPost httpPost = new HttpPost(Property.getByKey("url.request.build"));
+				StringEntity entity = new StringEntity("token=" + token + "&id=" + buildId + "&id_target=" + webSite);
+				httpPost.setEntity(entity);
+				httpPost.setHeader("Content-type", "application/x-www-form-urlencoded");
+				CloseableHttpResponse response = httpClient.execute(httpPost);
 
-				listener.getLogger().println("token " + token);
-				listener.getLogger().println("webSite " + webSite);
-				listener.getLogger().println("buildId " + buildId);
-				listener.getLogger().println("onlyBuildSuccess " + onlyBuildSuccess);
-
+				if (response.getStatusLine().getStatusCode() == 200) {
+					String result = EntityUtils.toString(response.getEntity());
+					if (INVALID_TOKEN.equalsIgnoreCase(result)) {
+						listener.getLogger().println(Messages.ZeroBugPublisher_DescriptorImpl_errors_invalidToken());
+						run.setResult(Result.FAILURE);
+					} else {
+						run.addAction(new ZeroBugAction(token, webSite, buildId, run));
+					}
+				} else {
+					listener.getLogger().println(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Error());
+					run.setResult(Result.FAILURE);
+				}
 			} finally {
 				httpClient.close();
 			}
@@ -162,10 +176,9 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 
 					if (response.getStatusLine().getStatusCode() == 200) {
 						String result = EntityUtils.toString(response.getEntity());
-						if (!"no".equalsIgnoreCase(result)) {
+						if (!INVALID_TOKEN.equalsIgnoreCase(result)) {
 							ObjectMapper objectMapper = new ObjectMapper();
-							ResponseListUrl responseListUrl = objectMapper.readValue(result,
-									ResponseListUrl.class);
+							ResponseListUrl responseListUrl = objectMapper.readValue(result, ResponseListUrl.class);
 							responseListUrl.getResultado().stream().forEach(resultado -> {
 								items.add(resultado.getUrl(), resultado.getId());
 							});
@@ -217,7 +230,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 
 				if (response.getStatusLine().getStatusCode() == 200) {
 					String result = EntityUtils.toString(response.getEntity());
-					if ("ok".equalsIgnoreCase(result)) {
+					if (!INVALID_TOKEN.equalsIgnoreCase(result)) {
 						return FormValidation.ok(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Success());
 					} else {
 						return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_errors_invalidToken());
