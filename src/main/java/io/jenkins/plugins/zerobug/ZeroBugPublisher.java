@@ -184,7 +184,8 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 							});
 						}
 					}
-
+				} catch (Exception e) {
+					
 				} finally {
 					httpClient.close();
 				}

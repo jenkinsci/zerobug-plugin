@@ -3,6 +3,7 @@
     
 	<f:entry title="${%WebSite}" field="webSite" >
 		<f:select />
+		${%WarningInvalidTokenOrEmptyWebSiteList}
 	</f:entry>
     
     <f:entry title="${%OnlyBuildSuccess}" field="onlyBuildSuccess">
