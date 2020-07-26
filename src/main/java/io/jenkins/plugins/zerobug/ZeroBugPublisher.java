@@ -185,7 +185,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 						}
 					}
 				} catch (Exception e) {
-					
+					e.printStackTrace();
 				} finally {
 					httpClient.close();
 				}
