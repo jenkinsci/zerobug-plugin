@@ -164,7 +164,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 						String result = EntityUtils.toString(response.getEntity());
 						if (!"no".equalsIgnoreCase(result)) {
 							ObjectMapper objectMapper = new ObjectMapper();
-							ResponseListUrl responseListUrl = objectMapper.readValue(response.getEntity().getContent(),
+							ResponseListUrl responseListUrl = objectMapper.readValue(result,
 									ResponseListUrl.class);
 							responseListUrl.getResultado().stream().forEach(resultado -> {
 								items.add(resultado.getUrl(), resultado.getId());
