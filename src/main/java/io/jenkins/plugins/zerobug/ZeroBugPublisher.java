@@ -7,7 +7,6 @@ import javax.servlet.ServletException;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -20,6 +19,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.verb.POST;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hudson.Extension;
 import hudson.FilePath;
@@ -36,6 +37,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import io.jenkins.plugins.zerobug.commons.Property;
+import io.jenkins.plugins.zerobug.model.ResponseListUrl;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
@@ -151,19 +153,24 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 			if (!StringUtils.isBlank(Secret.toString(this.token))) {
 				CloseableHttpClient httpClient = HttpClients.createDefault();
 				try {
-					HttpGet request = new HttpGet(Property.getByKey("url.get.list.site"));
-					CloseableHttpResponse response = httpClient.execute(request);
+					HttpPost httpPost = new HttpPost(Property.getByKey("url.get.list.site"));
+					StringEntity stringEntity = new StringEntity("token=" + token);
+					httpPost.setEntity(stringEntity);
+					httpPost.setHeader("Content-type", "application/x-www-form-urlencoded");
 
-					HttpEntity entity = response.getEntity();
-					if (entity != null) {
-						String result = EntityUtils.toString(entity);
-						items.add(result, "0");
+					CloseableHttpResponse response = httpClient.execute(httpPost);
+
+					if (response.getStatusLine().getStatusCode() == 200) {
+						String result = EntityUtils.toString(response.getEntity());
+						if (!"no".equalsIgnoreCase(result)) {
+							ObjectMapper objectMapper = new ObjectMapper();
+							ResponseListUrl responseListUrl = objectMapper.readValue(response.getEntity().getContent(),
+									ResponseListUrl.class);
+							responseListUrl.getResultado().stream().forEach(resultado -> {
+								items.add(resultado.getUrl(), resultado.getId());
+							});
+						}
 					}
-
-					items.add("http://www.google.com", "1");
-					items.add("http://www.globo.com", "2");
-					items.add("http://www.jenkins.com", "3");
-					items.add("http://www.java.com", "4");
 
 				} finally {
 					httpClient.close();
@@ -216,8 +223,8 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 						return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_errors_invalidToken());
 					}
 				} else {
-					return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Reject()
-							+ " " + response.getStatusLine().getStatusCode());
+					return FormValidation.error(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Reject() + " "
+							+ response.getStatusLine().getStatusCode());
 				}
 			} catch (Exception e) {
 				return FormValidation
