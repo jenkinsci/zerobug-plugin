@@ -38,7 +38,9 @@ public class ZeroBugAction implements Action {
 	}
 
 	public String getSrcIframe() throws IOException {
-		this.srcIframe = Property.getByKey("url.iframe");
+		String url = Property.getByKey("url.iframe");
+		this.srcIframe = String.format("%s?build_id=%s&token=%s&target_id=%s", url, this.buildId, this.token, this.webSite);
+				
 		return srcIframe;
 	}
 
