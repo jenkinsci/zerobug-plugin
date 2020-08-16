@@ -119,13 +119,13 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 				if (response.getStatusLine().getStatusCode() == 200) {
 					String result = EntityUtils.toString(response.getEntity());
 					if (INVALID_TOKEN.equalsIgnoreCase(result)) {
-						listener.getLogger().println(Messages.ZeroBugPublisher_DescriptorImpl_errors_invalidToken());
+						listener.getLogger().println("ERROR: " + Messages.ZeroBugPublisher_DescriptorImpl_errors_invalidToken());
 						run.setResult(Result.FAILURE);
 					} else {
 						run.addAction(new ZeroBugAction(token, webSite, buildId, run));
 					}
 				} else {
-					listener.getLogger().println(Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Error());
+					listener.getLogger().println("ERROR: " + Messages.ZeroBugPublisher_DescriptorImpl_Validate_Connect_Error());
 					run.setResult(Result.FAILURE);
 				}
 			} finally {
