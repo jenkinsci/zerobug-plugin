@@ -2,6 +2,7 @@ package io.jenkins.plugins.zerobug;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import javax.servlet.ServletException;
 
@@ -82,7 +83,7 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 	}
 
 	private String generateBuildId(String token, String webSite) {
-		String password = token + webSite + LocalDate.now();
+		String password = token + webSite + LocalDateTime.now();
 		return DigestUtils.md5Hex(password).toUpperCase();
 	}
 
@@ -105,7 +106,6 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 			try {
 				String buildId = generateBuildId(Secret.toString(token), webSite);
 
-				listener.getLogger().println("INFO: Token - " + token);
 				listener.getLogger().println("INFO: Web Site ID - " + webSite);
 				listener.getLogger().println("INFO: Build ID - " + buildId);
 				listener.getLogger().println("INFO: Only Build Success - " + onlyBuildSuccess);
