@@ -133,7 +133,8 @@ public class ZeroBugPublisher extends Recorder implements SimpleBuildStep {
 		}
 	}
 
-	@Symbol("zeroBug", "ZeroBugPublisher") // Prefer zeroBug, accept ZeroBugPublisher as Pipeline keyword
+	@Symbol({"zeroBug", "ZeroBugPublisher"}) // Prefer zeroBug, accept ZeroBugPublisher as keyword
+
 	@Extension
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
