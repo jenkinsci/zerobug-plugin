@@ -19,8 +19,11 @@ only once.
 
 ### Pipeline Script
 
-step([$class: 'ZeroBugPublisher', webSite : 'https://google.com'])
+The [Pipeline snippet syntax generator](https://www.jenkins.io/redirect/pipeline-snippet-generator) suggests
 
+```
+ZeroBugPublisher('https://your-site.example.com')
+```
 
 ### Scan Settings
 
